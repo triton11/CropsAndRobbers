@@ -1,0 +1,133 @@
+<p>
+  <strong>Hello <%= current_user.name %>!</strong>
+</p>
+<p>
+  <strong>Code:</strong>
+  <%= @room.code %>
+</p>
+<% if current_user.role.blank? %>
+<p>
+  Players:
+  <br>
+  <% @room.players.each do |player| %>
+  	<%= player.name %> <br>
+  <% end %>
+</p>
+</div>
+<%= button_to 'Start', :method => "start" %>
+<% else %>
+	<p>
+		You are a <%= current_user.role %>!
+	</p>
+	<div> You have <span id="score">0</span> crops!</div>
+	<div> You have <span id="lives">3</span> lives!</div>
+	<div id="update"> </div>
+	<div id="countdown"></div>
+	<div id="options">
+	<% if current_user.role == "thief" %>
+	<p>
+	  Rob:
+	  <br>
+	  <% @room.players.each do |player| %>
+	  	<button <%="onclick=rob("+"#{@room.id}"+","+"#{current_user.id}"+","+"#{player.id}"+")" %> ><%= "#{player.name}" %></button> <br>
+	  <% end %>
+	</p>
+	<% elsif current_user.role == "farmer" %>
+	<p>
+		<button <%="onclick=farm("+"#{@room.id}"+","+"#{current_user.id}"+")" %> >Farm</button>
+	</p>
+	<p>
+	  Guard:
+	  <br>
+	  <% @room.players.each do |player| %>
+	  	<button <%="onclick=guard("+"#{@room.id}"+","+"#{current_user.id}"+","+"#{player.id}"+")" %> ><%= "#{player.name}" %></button> <br>
+	  <% end %>
+	</p>
+	<% end %>
+<%= button_to 'End', "/rooms/#{@room.id}/end" %>
+<% end %>
+<%= link_to 'Home', root_path%>
+<script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+<script type="text/javascript">
+
+	function get_info(user_id) {
+		$.ajax({
+	        type: "GET",
+	        url: `/players/${user_id}/info`,
+	        dataType: 'json',
+	        success: function(result) {
+	        	if (parseInt(document.getElementById("score").innerHTML, 10) > parseInt(result["score"])){
+	        		document.getElementById("update").innerHTML = "You've been robbed!"
+	        	} else {
+	        		document.getElementById("update").innerHTML = " "
+	        	}
+	        	if (parseInt(document.getElementById("lives").innerHTML, 10) > parseInt(result["lives"])){
+	        		document.getElementById("update").innerHTML = "You've been shot!"
+	        	} else {
+	        		document.getElementById("update").innerHTML = " "
+	        	}
+	            document.getElementById("score").innerHTML = result["score"]
+	            document.getElementById("lives").innerHTML = result["lives"]
+	        },
+	        error: function(result) {
+	            alert(result)
+	        }
+	    });
+	}
+
+	var startTimer = function(user_id) {
+		document.getElementById("countdown").style.display = "block"
+		document.getElementById("options").style.display = "none"
+		var timeleft = 10;
+		var downloadTimer = setInterval(function(){
+		  document.getElementById("countdown").innerHTML = timeleft + " seconds remaining";
+		  timeleft -= 1;
+		  if(timeleft <= 0){
+		  	get_info(user_id)
+		    clearInterval(downloadTimer);
+		    document.getElementById("countdown").style.display = "none"
+		    document.getElementById("options").style.display = "block"
+		  }
+		}, 1000);
+	}
+
+	function farm(room_id, user_id) {
+		$.ajax({
+	        type: "POST",
+	        url: `/rooms/${room_id}/farm/${user_id}`,
+	        success: function(result) {
+	            startTimer(user_id)
+	        },
+	        error: function(result) {
+	            alert('error');
+	        }
+	    });
+	}
+
+	function rob(room_id, user_id, affected_id) {
+	    $.ajax({
+	        type: "POST",
+	        url: `/rooms/${room_id}/rob/${user_id}/${affected_id}`,
+	        success: function(result) {
+	        	startTimer(user_id)
+	        },
+	        error: function(result) {
+	            alert('error');
+	        }
+	    });
+	};
+
+  	function guard(room_id, user_id, guard_id) {
+	    $.ajax({
+	        type: "POST",
+	        url: `/rooms/${room_id}/guard/${user_id}/${guard_id}`,
+	        success: function(result) {
+	            startTimer(user_id);
+	        },
+	        error: function(result) {
+	            alert('error');
+	        }
+	    });
+	};
+</script>
