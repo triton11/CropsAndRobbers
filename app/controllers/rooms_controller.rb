@@ -41,20 +41,22 @@ class RoomsController < ApplicationController
     player = @room.players.find_by(id: params[:player_id])
     player_affected = @room.players.find_by(id: params[:player_affected])
     shot = false
+    player.update({visiting: player_affected.name, busy_until: Time.now + 10})
     @room.players.each do |p|
       puts(p.busy_until)
       if p&.visiting == player_affected.name && p.role == "farmer" && p&.busy_until > Time.now
         shot = true
       end
     end
-    if (player_affected&.busy_until > Time.now && shot == false)
-      player_affected_new_score = player.score + player_affected.score
-      player_affected.update({score: 0})
+    # Add --player_affected&.busy_until > Time.now && -- to make idle invincible
+    if (shot == false)
+      player_new_score = (player_affected.score > 1) ? player.score + 2 : player.score + player_affected.score
+      player_affected_new_score = (player_affected.score > 1) ? player_affected.score - 2 : 0
+      player_affected.update({score: player_affected_new_score})
       player_affected.save
-      player.update({score: player_affected_new_score})
+      player.update({score: player_new_score})
       player.save
-    end
-    if (player_affected&.busy_until > Time.now && shot == true)
+    elsif (shot == true)
       lives_remaining = player.lives - 1
       player.update({lives: lives_remaining})
       player.save
@@ -105,7 +107,7 @@ class RoomsController < ApplicationController
   # POST /rooms
   # POST /rooms.json
   def create
-    player_params = {"name"=>room_params[:leader], "score"=>0, "lives"=>3}
+    player_params = {"name"=>room_params[:leader], "score"=>0, "lives"=>2, "busy_until"=>Time.now}
   
     @room = Room.new(room_params)
 

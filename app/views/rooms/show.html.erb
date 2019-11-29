@@ -20,7 +20,7 @@
 		You are a <%= current_user.role %>!
 	</p>
 	<div> You have <span id="score">0</span> crops!</div>
-	<div> You have <span id="lives">3</span> lives!</div>
+	<div> You have <span id="lives">2</span> lives!</div>
 	<div id="update"> </div>
 	<div id="countdown"></div>
 	<div id="options">
@@ -29,7 +29,9 @@
 	  Rob:
 	  <br>
 	  <% @room.players.each do |player| %>
-	  	<button <%="onclick=rob("+"#{@room.id}"+","+"#{current_user.id}"+","+"#{player.id}"+")" %> ><%= "#{player.name}" %></button> <br>
+	  	<% unless player.name == current_user.name %>
+	  		<button <%="onclick=rob("+"#{@room.id}"+","+"#{current_user.id}"+","+"#{player.id}"+")" %> ><%= "#{player.name}" %></button> <br>
+	  	<% end %>
 	  <% end %>
 	</p>
 	<% elsif current_user.role == "farmer" %>
@@ -40,7 +42,9 @@
 	  Guard:
 	  <br>
 	  <% @room.players.each do |player| %>
-	  	<button <%="onclick=guard("+"#{@room.id}"+","+"#{current_user.id}"+","+"#{player.id}"+")" %> ><%= "#{player.name}" %></button> <br>
+		  <% unless player.name == current_user.name %>
+		  	<button <%="onclick=guard("+"#{@room.id}"+","+"#{current_user.id}"+","+"#{player.id}"+")" %> ><%= "#{player.name}" %></button> <br>
+		  <% end %>
 	  <% end %>
 	</p>
 	<% end %>
@@ -59,13 +63,13 @@
 	        success: function(result) {
 	        	if (parseInt(document.getElementById("score").innerHTML, 10) > parseInt(result["score"])){
 	        		document.getElementById("update").innerHTML = "You've been robbed!"
-	        	} else {
-	        		document.getElementById("update").innerHTML = " "
-	        	}
-	        	if (parseInt(document.getElementById("lives").innerHTML, 10) > parseInt(result["lives"])){
+	        	} else if (parseInt(document.getElementById("lives").innerHTML, 10) > parseInt(result["lives"])){
 	        		document.getElementById("update").innerHTML = "You've been shot!"
 	        	} else {
 	        		document.getElementById("update").innerHTML = " "
+	        	}
+	        	if (result["notice"] != null) {
+	        		document.getElementById("update").innerHTML = result["notice"]
 	        	}
 	            document.getElementById("score").innerHTML = result["score"]
 	            document.getElementById("lives").innerHTML = result["lives"]

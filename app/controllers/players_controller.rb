@@ -10,8 +10,22 @@ class PlayersController < ApplicationController
 
   def info
     set_player
+    notice = nil
+    puts("GETTING INFO FOR:")
+    puts(@player.name)
+    puts(@player.visiting)
+    Player.all.each do |p|
+      puts(p.role)
+      puts(p.visiting)
+      puts(p&.busy_until > Time.now)
+      if p.visiting == @player.visiting && p.role == "thief" && p&.busy_until > Time.now
+        puts("You shot #{p.name}")
+        notice = "You shot someone!"
+      end
+    end
+    @player.update({visiting: ""})
     respond_to do |format|
-      format.js { render json: @player }
+      format.js { render json: {"score"=>@player.score, "lives"=>@player.lives, "notice"=> notice} }
     end
   end
 
@@ -32,7 +46,7 @@ class PlayersController < ApplicationController
   # POST /players
   # POST /players.json
   def create
-    p = {"name"=>player_params[:name], "score"=>0, "lives"=>3 }
+    p = {"name"=>player_params[:name], "score"=>0, "lives"=>2, "busy_until"=>Time.now }
 
     @player = Player.new(p)
     @room = Room.find_by(code: player_params[:room])
