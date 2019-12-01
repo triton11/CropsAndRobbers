@@ -13,6 +13,8 @@ Rails.application.routes.draw do
   post 'rooms/:id/farm/:player_id', to: 'rooms#farm'
   post 'rooms/:id/guard/:player_id/:player_affected', to: 'rooms#guard'
   post 'rooms/:id/rob/:player_id/:player_affected', to: 'rooms#rob'
+  post 'rooms/:id/investigate/:player_id/:player_affected', to: 'rooms#investigate'
+
 
 
   get 'players/:id/info', to: 'players#info'

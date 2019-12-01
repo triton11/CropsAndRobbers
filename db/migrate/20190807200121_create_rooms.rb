@@ -5,6 +5,7 @@ class CreateRooms < ActiveRecord::Migration
       t.string :leader
       t.integer :thief_count
       t.integer :farmer_count
+      t.integer :investigator_count
 
       t.timestamps null: false
     end

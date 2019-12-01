@@ -1,3 +1,10 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Crops and Robbers!</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+</head>
+<body>
 <%= form_for(@room) do |f| %>
   <% if @room.errors.any? %>
     <div id="error_explanation">
@@ -20,7 +27,24 @@
     <%= f.label :code %><br>
     <%= f.text_field :code %>
   </div>
+
+  <div class="field">
+    <%= f.label :farmer_count %><br>
+    <%= f.number_field :farmer_count %>
+  </div>
+
+  <div class="field">
+    <%= f.label :thief_count %><br>
+    <%= f.number_field :thief_count %>
+  </div>
+
+  <div class="field">
+    <%= f.label :investigator_count %><br>
+    <%= f.number_field :investigator_count %>
+  </div>
   <div class="actions">
     <%= f.submit %>
   </div>
 <% end %>
+</body>
+</html>

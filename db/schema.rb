@@ -44,8 +44,9 @@ ActiveRecord::Schema.define(version: 20191128002659) do
     t.string   "leader"
     t.integer  "thief_count"
     t.integer  "farmer_count"
-    t.datetime "created_at",   null: false
-    t.datetime "updated_at",   null: false
+    t.integer  "investigator_count"
+    t.datetime "created_at",         null: false
+    t.datetime "updated_at",         null: false
   end
 
 end

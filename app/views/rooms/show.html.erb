@@ -1,3 +1,10 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Crops and Robbers!</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+</head>
+<body>
 <p>
   <strong>Hello <%= current_user.name %>!</strong>
 </p>
@@ -20,7 +27,7 @@
 		You are a <%= current_user.role %>!
 	</p>
 	<div> You have <span id="score">0</span> crops!</div>
-	<div> You have <span id="lives">2</span> lives!</div>
+	<div <%= current_user.role != "thief" ? "style=display:none" : ""%>> You have <span id="lives">2</span> lives!</div>
 	<div id="update"> </div>
 	<div id="countdown"></div>
 	<div id="options">
@@ -30,7 +37,11 @@
 	  <br>
 	  <% @room.players.each do |player| %>
 	  	<% unless player.name == current_user.name %>
+	  		<% if player.role == "thief" %>
+	  			<%= player.name %> is another thief! <br>
+	  		<% else %>
 	  		<button <%="onclick=rob("+"#{@room.id}"+","+"#{current_user.id}"+","+"#{player.id}"+")" %> ><%= "#{player.name}" %></button> <br>
+	  		<% end %>
 	  	<% end %>
 	  <% end %>
 	</p>
@@ -47,10 +58,24 @@
 		  <% end %>
 	  <% end %>
 	</p>
+	<% elsif current_user.role == "investigator" %>
+	<p>
+	  Investigate:
+	  <br>
+	  <% @room.players.each do |player| %>
+		  <% unless player.name == current_user.name %>
+		  	<button <%="onclick=investigate("+"#{@room.id}"+","+"#{current_user.id}"+","+"#{player.id}"+")" %> ><%= "#{player.name}" %></button> <br>
+		  <% end %>
+	  <% end %>
+	</p>
 	<% end %>
-<%= button_to 'End', "/rooms/#{@room.id}/end" %>
+	<% if current_user.name == @room.leader %>
+		<%= button_to 'End', "/rooms/#{@room.id}/end" %>
+		<%= button_to 'Reset', :method => "start" %>
+	<% end %>
 <% end %>
 <%= link_to 'Home', root_path%>
+</body>
 <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
 
 <script type="text/javascript">
@@ -122,6 +147,19 @@
 	    });
 	};
 
+	function investigate(room_id, user_id, affected_id) {
+	    $.ajax({
+	        type: "POST",
+	        url: `/rooms/${room_id}/investigate/${user_id}/${affected_id}`,
+	        success: function(result) {
+	        	startTimer(user_id)
+	        },
+	        error: function(result) {
+	            alert('error');
+	        }
+	    });
+	};
+
   	function guard(room_id, user_id, guard_id) {
 	    $.ajax({
 	        type: "POST",
@@ -135,3 +173,4 @@
 	    });
 	};
 </script>
+</html>

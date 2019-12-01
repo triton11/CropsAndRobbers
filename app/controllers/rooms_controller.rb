@@ -22,10 +22,22 @@ class RoomsController < ApplicationController
     end
   end
 
+  def investigate
+    set_room
+    puts("Investigating!")
+    player = @room.players.find_by(id: params[:player_id])
+    player_affected = @room.players.find_by(id: params[:player_affected])
+    player.update({visiting: player_affected.name, busy_until: Time.now + 10 })
+    player.save
+
+    respond_to do |format|
+      format.js { render json: {} }
+    end
+  end
+
   def guard
     set_room
     puts("Guarding!")
-    puts(@room.players)
     player = @room.players.find_by(id: params[:player_id])
     player_affected = @room.players.find_by(id: params[:player_affected])
     player.update({visiting: player_affected.name, busy_until: Time.now + 10 })
@@ -38,6 +50,7 @@ class RoomsController < ApplicationController
 
   def rob
     set_room
+    puts("Robbing!")
     player = @room.players.find_by(id: params[:player_id])
     player_affected = @room.players.find_by(id: params[:player_affected])
     shot = false
@@ -50,8 +63,9 @@ class RoomsController < ApplicationController
     end
     # Add --player_affected&.busy_until > Time.now && -- to make idle invincible
     if (shot == false)
-      player_new_score = (player_affected.score > 1) ? player.score + 2 : player.score + player_affected.score
-      player_affected_new_score = (player_affected.score > 1) ? player_affected.score - 2 : 0
+      max_payoff = @room.players.size - 1
+      player_new_score = (player_affected.score > max_payoff - 1) ? player.score + max_payoff : player.score + player_affected.score
+      player_affected_new_score = (player_affected.score > max_payoff - 1) ? player_affected.score - max_payoff : 0
       player_affected.update({score: player_affected_new_score})
       player_affected.save
       player.update({score: player_new_score})
@@ -69,10 +83,17 @@ class RoomsController < ApplicationController
 
   def start
     set_room
-    thief = @room.players.sample
-    thief.update(role: "thief")
-    (@room.players - [thief]).each do |player|
-      player.update(role: "farmer")
+    thieves = @room.players.sample(@room.thief_count)
+    thieves.each do |thief|
+      thief.update({role: "thief", "score"=>0, "lives"=>2, "busy_until"=>Time.now})
+    end
+    farmers = (@room.players - thieves).sample(@room.farmer_count)
+    farmers.each do |player|
+      player.update({role: "farmer", "score"=>0, "lives"=>2, "busy_until"=>Time.now})
+    end
+    investigators = ((@room.players - thieves) - farmers)
+    investigators.each do |player|
+      player.update({role: "investigator", "score"=>0, "lives"=>2, "busy_until"=>Time.now})
     end
     respond_to do |format|
       format.html { redirect_to @room, notice: "Game start!" }
@@ -107,7 +128,7 @@ class RoomsController < ApplicationController
   # POST /rooms
   # POST /rooms.json
   def create
-    player_params = {"name"=>room_params[:leader], "score"=>0, "lives"=>2, "busy_until"=>Time.now}
+    player_params = {"name"=>room_params[:leader]}
   
     @room = Room.new(room_params)
 
@@ -161,6 +182,6 @@ class RoomsController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def room_params
-      params.require(:room).permit(:code, :leader)
+      params.require(:room).permit(:code, :leader, :farmer_count, :thief_count, :investigator_count)
     end
 end
