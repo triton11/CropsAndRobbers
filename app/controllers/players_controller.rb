@@ -11,25 +11,39 @@ class PlayersController < ApplicationController
   def info
     set_player
     notice = nil
-    puts("GETTING INFO FOR:")
-    puts(@player.name)
     investigated = []
+    puts("====================")
+    puts("Player: ", @player.name)
+    puts("visiting?", @player.visiting)
     Player.all.each do |p|
-      if p.visiting == @player.visiting && p.role == "thief" && @player.role == "farmer" && p&.busy_until > Time.now
-        puts("You shot #{p.name}")
-        notice = "You shot someone!"
-      end
-      if p.visiting == @player.visiting && @player.role == "investigator" && p&.busy_until > Time.now
-        puts("You caught #{p.name}")
-        investigated << p.name
+      unless(p == @player) 
+        puts("-------------------")
+        puts("Checking: ", p.name)
+        puts("busy_until: ", p&.busy_until)
+        puts("visiting? ", p.visiting)
+        if p.visiting == @player.visiting && p.role == "thief" && @player.role == "farmer" && p&.busy_until > Time.now && p.visiting != ""
+          notice = "You shot someone!"
+        end
+        if p.visiting == @player.visiting && @player.role == "investigator" && p&.busy_until > Time.now
+          investigated << p.name
+        end
       end
     end
     if (investigated.any?)
+      puts("Found : ", investigated)
       notice = "While at #{@player.visiting}, you saw " + investigated.join(", ")
     end
-    @player.update({visiting: ""})
+    puts("====================")
     respond_to do |format|
       format.js { render json: {"score"=>@player.score, "lives"=>@player.lives, "notice"=> notice} }
+    end
+  end
+
+  def clear
+    set_player
+    @player.update({visiting: ""})
+    respond_to do |format|
+      format.js { render json: "" }
     end
   end
 

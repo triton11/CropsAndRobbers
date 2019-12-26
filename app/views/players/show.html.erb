@@ -4,6 +4,18 @@
   <strong>Name:</strong>
   <%= @player.name %>
 </p>
+<p>
+	Role: <%= @player.role %>
+</p>
+<p>
+	Score: <%= @player.score %>
+</p>
+<p>
+	Lives: <%= @player.lives %>
+</p>
+<p>
+	visiting: <%= @player.visiting %>
+</p>
 
 <%= link_to 'Edit', edit_player_path(@player) %> |
 <%= link_to 'Back', players_path %>

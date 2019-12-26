@@ -1,0 +1,13 @@
+<p>
+	Rob:
+	<br>
+	<% @room.players.each do |player| %>
+		<% unless player.name == current_user.name %>
+			<% if player.role == "thief" %>
+				<%= player.name %> is another thief! <br>
+			<% else %>
+			<button <%="onclick=rob("+"#{@room.id}"+","+"#{current_user.id}"+","+"#{player.id}"+")" %> ><%= "#{player.name}" %></button> <br>
+			<% end %>
+		<% end %>
+	<% end %>
+</p>

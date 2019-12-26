@@ -18,6 +18,7 @@ Rails.application.routes.draw do
 
 
   get 'players/:id/info', to: 'players#info'
+  get 'players/:id/clear', to: 'players#clear'
 
 
   get '/login' => 'session#new'

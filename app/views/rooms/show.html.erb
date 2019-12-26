@@ -5,88 +5,91 @@
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 </head>
 <body>
-<p>
-  <strong>Hello <%= current_user.name %>!</strong>
-</p>
-<p>
-  <strong>Code:</strong>
-  <%= @room.code %>
-</p>
-<% if current_user.role.blank? %>
-<p>
-  Players:
-  <br>
-  <% @room.players.each do |player| %>
-  	<%= player.name %> <br>
-  <% end %>
-</p>
-</div>
-<%= button_to 'Start', :method => "start" %>
-<% else %>
-	<p>
-		You are a <%= current_user.role %>!
-	</p>
-	<div> You have <span id="score">0</span> crops!</div>
-	<div <%= current_user.role != "thief" ? "style=display:none" : ""%>> You have <span id="lives">2</span> lives!</div>
-	<div id="update"> </div>
-	<div id="countdown"></div>
-	<div id="options">
-	<% if current_user.role == "thief" %>
-	<p>
-	  Rob:
-	  <br>
-	  <% @room.players.each do |player| %>
-	  	<% unless player.name == current_user.name %>
-	  		<% if player.role == "thief" %>
-	  			<%= player.name %> is another thief! <br>
-	  		<% else %>
-	  		<button <%="onclick=rob("+"#{@room.id}"+","+"#{current_user.id}"+","+"#{player.id}"+")" %> ><%= "#{player.name}" %></button> <br>
-	  		<% end %>
-	  	<% end %>
-	  <% end %>
-	</p>
-	<% elsif current_user.role == "farmer" %>
-	<p>
-		<button <%="onclick=farm("+"#{@room.id}"+","+"#{current_user.id}"+")" %> >Farm</button>
-	</p>
-	<p>
-	  Guard:
-	  <br>
-	  <% @room.players.each do |player| %>
-		  <% unless player.name == current_user.name %>
-		  	<button <%="onclick=guard("+"#{@room.id}"+","+"#{current_user.id}"+","+"#{player.id}"+")" %> ><%= "#{player.name}" %></button> <br>
+	<nav class="navbar navbar-expand navbar-light bg-light">
+		<div class="navbar-nav" style="margin-left: auto; margin-right: auto; left: 0; right: 0;">
+			<div class="m-2">
+  				<%= link_to 'Home', root_path%>
+  			</div>
+  			<div class="m-2">
+  				<%= link_to 'Refresh!', @room_path%>
+  			</div>
+  			<% if current_user.name == @room.leader %>
+  				<div class="m-2">
+					<%= button_to 'End', "/rooms/#{@room.id}/end" %>
+				</div>
+				<div class="m-2">
+					<%= button_to 'Reset', :method => "start" %>
+				</div>
+			<% end %>
+  	</nav>
+	<div style="padding: 10px" class="container" align="center">
+		<p>
+		  <strong>Hello <%= current_user.name %>!</strong>
+		</p>
+		<p>
+		  <strong>Code:</strong>
+		  <%= @room.code %>
+		</p>
+		<% if current_user.role.blank? %>
+		<p>
+		  Players:
+		  <br>
+		  <% @room.players.each do |player| %>
+		  	<%= player.name %> <br>
 		  <% end %>
-	  <% end %>
-	</p>
-	<% elsif current_user.role == "investigator" %>
-	<p>
-	  Investigate:
-	  <br>
-	  <% @room.players.each do |player| %>
-		  <% unless player.name == current_user.name %>
-		  	<button <%="onclick=investigate("+"#{@room.id}"+","+"#{current_user.id}"+","+"#{player.id}"+")" %> ><%= "#{player.name}" %></button> <br>
-		  <% end %>
-	  <% end %>
-	</p>
-	<% end %>
-	<% if current_user.name == @room.leader %>
-		<%= button_to 'End', "/rooms/#{@room.id}/end" %>
-		<%= button_to 'Reset', :method => "start" %>
-	<% end %>
-<% end %>
-<%= link_to 'Home', root_path%>
+		</p>
+		<% if current_user.name == @room.leader %>
+			<%= button_to 'Start', :method => "start" %>
+		<% end %>
+		<% else %>
+			<p>
+				You are a <%= current_user.role %>!
+			</p>
+			<div> You have <span id="score">0</span> crops!</div>
+			<div <%= current_user.role != "thief" ? "style=display:none" : ""%>> You have <span id="lives">2</span> lives!</div>
+			<div id="update"></div>
+			<div id="countdown"></div>
+			<div id="options">
+
+				<% if current_user.role == "thief" %>
+					<%= render 'robber' %>
+				<% elsif current_user.role == "farmer" %>
+					<%= render 'farmer' %>
+				<% elsif current_user.role == "investigator" %>
+					<%= render 'investigator' %>
+				<% end %>
+			</div>
+		<% end %>
+	</div>
 </body>
 <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
 
-<script type="text/javascript">
 
-	function get_info(user_id) {
+
+<script type="text/javascript">
+	function clear_user(user_id) {
+		$.ajax({
+	        type: "GET",
+	        url: `/players/${user_id}/clear`,
+	        dataType: 'json',
+	        success: function(result) {
+	        },
+	        error: function(result) {
+	        }
+	    });
+	}
+	function get_info(user_id, activity) {
 		$.ajax({
 	        type: "GET",
 	        url: `/players/${user_id}/info`,
 	        dataType: 'json',
 	        success: function(result) {
-	        	if (parseInt(document.getElementById("score").innerHTML, 10) > parseInt(result["score"])){
+	        	//Clear visitors for non-robbers only after info completes
+	        	if (activity != "rob") {
+	        		clear_user(user_id)
+	        	}
+	        	current_score = parseInt(document.getElementById("score").innerHTML, 10)
+	        	if (current_score > parseInt(result["score"]) || (current_score >= parseInt(result["score"]) && activity == "farm")) {
 	        		document.getElementById("update").innerHTML = "You've been robbed!"
 	        	} else if (parseInt(document.getElementById("lives").innerHTML, 10) > parseInt(result["lives"])){
 	        		document.getElementById("update").innerHTML = "You've been shot!"
@@ -105,19 +108,31 @@
 	    });
 	}
 
-	var startTimer = function(user_id) {
+	var startTimer = function(user_id, activity) {
 		document.getElementById("countdown").style.display = "block"
 		document.getElementById("options").style.display = "none"
+		document.getElementById("update").innerHTML = " "
+		//Get robbery info
+		if (activity == "rob") {
+			get_info(user_id, activity)
+		}
 		var timeleft = 10;
 		var downloadTimer = setInterval(function(){
 		  document.getElementById("countdown").innerHTML = timeleft + " seconds remaining";
-		  timeleft -= 1;
 		  if(timeleft <= 0){
-		  	get_info(user_id)
+		  	//The robber gets info immediately, because the robbery happens immediately
+		  	if (activity != "rob") {
+		  		get_info(user_id, activity)
+		  	} else {
+		  		//Clear the robber's visit
+		  		clear_user(user_id)
+		  	}
 		    clearInterval(downloadTimer);
+		    document.getElementById("countdown").innerHTML = " "
 		    document.getElementById("countdown").style.display = "none"
 		    document.getElementById("options").style.display = "block"
 		  }
+		  timeleft -= 1;
 		}, 1000);
 	}
 
@@ -126,7 +141,7 @@
 	        type: "POST",
 	        url: `/rooms/${room_id}/farm/${user_id}`,
 	        success: function(result) {
-	            startTimer(user_id)
+	            startTimer(user_id, "farm")
 	        },
 	        error: function(result) {
 	            alert('error');
@@ -139,7 +154,7 @@
 	        type: "POST",
 	        url: `/rooms/${room_id}/rob/${user_id}/${affected_id}`,
 	        success: function(result) {
-	        	startTimer(user_id)
+	        	startTimer(user_id, "rob")
 	        },
 	        error: function(result) {
 	            alert('error');
@@ -152,7 +167,7 @@
 	        type: "POST",
 	        url: `/rooms/${room_id}/investigate/${user_id}/${affected_id}`,
 	        success: function(result) {
-	        	startTimer(user_id)
+	        	startTimer(user_id, "investigate")
 	        },
 	        error: function(result) {
 	            alert('error');
@@ -165,7 +180,7 @@
 	        type: "POST",
 	        url: `/rooms/${room_id}/guard/${user_id}/${guard_id}`,
 	        success: function(result) {
-	            startTimer(user_id);
+	            startTimer(user_id, "guard");
 	        },
 	        error: function(result) {
 	            alert('error');

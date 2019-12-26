@@ -1,0 +1,12 @@
+<p>
+	<button <%="onclick=farm("+"#{@room.id}"+","+"#{current_user.id}"+")" %> >Farm</button>
+</p>
+<p>
+  Guard:
+  <br>
+  <% @room.players.each do |player| %>
+	  <% unless player.name == current_user.name %>
+	  	<button <%="onclick=guard("+"#{@room.id}"+","+"#{current_user.id}"+","+"#{player.id}"+")" %> ><%= "#{player.name}" %></button> <br>
+	  <% end %>
+  <% end %>
+</p>
