@@ -3,7 +3,7 @@
 	<br>
 	<% @room.players.each do |player| %>
 	  <% unless player.name == current_user.name %>
-	  	<button <%="onclick=investigate("+"#{@room.id}"+","+"#{current_user.id}"+","+"#{player.id}"+")" %> ><%= "#{player.name}" %></button> <br>
+	  	<button <%= "onclick=set_activity("+"#{@room.id}"+","+"'investigating'"+","+"#{current_user.id}"+","+"#{player.id}"+")" %> ><%= "#{player.name}" %></button> <br>
 	  <% end %>
 	<% end %>
 </p>

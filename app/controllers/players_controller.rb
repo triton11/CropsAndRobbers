@@ -8,37 +8,6 @@ class PlayersController < ApplicationController
     @players = Player.all
   end
 
-  def info
-    set_player
-    notice = nil
-    investigated = []
-    puts("====================")
-    puts("Player: ", @player.name)
-    puts("visiting?", @player.visiting)
-    Player.all.each do |p|
-      unless(p == @player) 
-        puts("-------------------")
-        puts("Checking: ", p.name)
-        puts("busy_until: ", p&.busy_until)
-        puts("visiting? ", p.visiting)
-        if p.visiting == @player.visiting && p.role == "thief" && @player.role == "farmer" && p&.busy_until > Time.now && p.visiting != ""
-          notice = "You shot someone!"
-        end
-        if p.visiting == @player.visiting && @player.role == "investigator" && p&.busy_until > Time.now
-          investigated << p.name
-        end
-      end
-    end
-    if (investigated.any?)
-      puts("Found : ", investigated)
-      notice = "While at #{@player.visiting}, you saw " + investigated.join(", ")
-    end
-    puts("====================")
-    respond_to do |format|
-      format.js { render json: {"score"=>@player.score, "lives"=>@player.lives, "notice"=> notice} }
-    end
-  end
-
   def clear
     set_player
     @player.update({visiting: ""})
@@ -64,7 +33,7 @@ class PlayersController < ApplicationController
   # POST /players
   # POST /players.json
   def create
-    p = {"name"=>player_params[:name]}
+    p = {"name"=>player_params[:name], score: 0, lives: 2}
 
     @player = Player.new(p)
     @room = Room.find_by(code: player_params[:room])

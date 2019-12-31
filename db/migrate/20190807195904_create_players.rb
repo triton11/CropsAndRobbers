@@ -3,10 +3,16 @@ class CreatePlayers < ActiveRecord::Migration
     create_table :players do |t|
       t.string :name
       t.string :role
+      t.string :visiting
+      t.string :activity
+
       t.integer :score
       t.integer :lives
-      t.string :visiting
-      t.timestamp :busy_until
+      t.string :last_round_notice
+
+      #Remove busy_until
+      # t.integer :busy_until
+      t.integer :round
       t.belongs_to :room, index: true
 
       t.timestamps null: false
