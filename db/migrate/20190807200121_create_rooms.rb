@@ -7,6 +7,11 @@ class CreateRooms < ActiveRecord::Migration
       t.integer :farmer_count
       t.integer :investigator_count
 
+      t.integer :round
+      t.integer :number_of_rounds
+      t.string :participants
+      t.integer :round_end
+
       t.timestamps null: false
     end
   end

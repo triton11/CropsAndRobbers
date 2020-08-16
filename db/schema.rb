@@ -28,13 +28,15 @@ ActiveRecord::Schema.define(version: 20191128002659) do
   create_table "players", force: :cascade do |t|
     t.string   "name"
     t.string   "role"
+    t.string   "visiting"
+    t.string   "activity"
     t.integer  "score"
     t.integer  "lives"
-    t.string   "visiting"
-    t.datetime "busy_until"
+    t.string   "last_round_notice"
+    t.integer  "round"
     t.integer  "room_id"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at",        null: false
+    t.datetime "updated_at",        null: false
   end
 
   add_index "players", ["room_id"], name: "index_players_on_room_id"
@@ -45,6 +47,10 @@ ActiveRecord::Schema.define(version: 20191128002659) do
     t.integer  "thief_count"
     t.integer  "farmer_count"
     t.integer  "investigator_count"
+    t.integer  "round"
+    t.integer  "number_of_rounds"
+    t.string   "participants"
+    t.integer  "round_end"
     t.datetime "created_at",         null: false
     t.datetime "updated_at",         null: false
   end

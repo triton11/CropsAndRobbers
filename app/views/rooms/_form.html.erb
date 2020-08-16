@@ -24,18 +24,24 @@
 
   <div class="field">
     <%= f.label :farmer_count %><br>
-    <%= f.number_field :farmer_count %>
+    <%= f.number_field :farmer_count, :value => 0 %>
   </div>
 
   <div class="field">
     <%= f.label :thief_count %><br>
-    <%= f.number_field :thief_count %>
+    <%= f.number_field :thief_count, :value => 0 %>
   </div>
 
   <div class="field">
     <%= f.label :investigator_count %><br>
-    <%= f.number_field :investigator_count %>
+    <%= f.number_field :investigator_count, :value => 0 %>
   </div>
+
+  <div class="field">
+    <%= f.label :number_of_rounds %><br>
+    <%= f.number_field :number_of_rounds, :value => 8 %>
+  </div>
+  
   <div class="actions">
     <%= f.submit %>
   </div>

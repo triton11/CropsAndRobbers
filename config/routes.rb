@@ -8,18 +8,14 @@ Rails.application.routes.draw do
   root 'welcome#index'
 
   post 'rooms/:id' => 'rooms#start'
-  post 'rooms/:id/end' => 'rooms#end'
+  post 'rooms/:id/end' => 'rooms#start'
+  get 'rooms/:id/end' => 'rooms#end'
 
-  post 'rooms/:id/farm/:player_id', to: 'rooms#farm'
-  post 'rooms/:id/guard/:player_id/:player_affected', to: 'rooms#guard'
-  post 'rooms/:id/rob/:player_id/:player_affected', to: 'rooms#rob'
-  post 'rooms/:id/investigate/:player_id/:player_affected', to: 'rooms#investigate'
+  post 'rooms/:id/delete_everything' => 'rooms#delete_everything'
 
-
-
-  get 'players/:id/info', to: 'players#info'
-  get 'players/:id/clear', to: 'players#clear'
-
+  get 'rooms/:id/round' => 'rooms#round'
+  get 'rooms/:id/:round/check' => 'rooms#calculate_state'
+  post 'rooms/:id/:activity/:player_id/:player_affected', to: 'rooms#set_activity'
 
   get '/login' => 'session#new'
   post '/login' => 'session#create'
