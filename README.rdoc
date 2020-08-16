@@ -5,8 +5,9 @@ Crops and Robbers is a game I created to experiment with Social Deduction game d
 This code is not my best work - I wrote it generally late at night, pivoted several times, and tried to get things working as quickly as possbile without taking time to optimize or structure the code. Refactoring this code is not a super high priority since this is a personal project, but I hope to get around to it someday.
 
 === Setup:
-* Ruby 2.3
-* Rails 4.2.6
-* Run Rake db:migrate
-* Start the server with rails -s
+* intall Ruby 2.3.0
+* install Rails 4.2.6
+* git clone the repo
+* run rake db:migrate
+* start the server with rails -s
 
