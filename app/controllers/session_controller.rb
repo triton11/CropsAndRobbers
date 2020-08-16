@@ -1,3 +1,4 @@
+# This controller just tracks logins for players
 class SessionController < ApplicationController
 	def new
 		render 'session/new'

@@ -8,14 +8,6 @@ class PlayersController < ApplicationController
     @players = Player.all
   end
 
-  def clear
-    set_player
-    @player.update({visiting: ""})
-    respond_to do |format|
-      format.js { render json: "" }
-    end
-  end
-
   # GET /players/1
   # GET /players/1.json
   def show

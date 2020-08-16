@@ -8,6 +8,7 @@ Rails.application.routes.draw do
   root 'welcome#index'
 
   post 'rooms/:id' => 'rooms#start'
+  post 'rooms/:id/end' => 'rooms#start'
   get 'rooms/:id/end' => 'rooms#end'
 
   post 'rooms/:id/delete_everything' => 'rooms#delete_everything'

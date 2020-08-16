@@ -23,8 +23,13 @@ class RoomsController < ApplicationController
     end
   end
 
+  # This is where the magic happens, baby. Yep. This one massive function.
   def calculate_state
     set_room
+
+    # params[:round].to_i >= @room.number_of_rounds checks if you have reached the final round.
+    # params[:round].to_i < @room.round checks if you are NOT the first person to finish, 
+    # because the first person needs to calculate the state.
     if (params[:round].to_i >= @room.number_of_rounds && params[:round].to_i < @room.round)
       respond_to do |format|
         format.js { render json: {game_over: "true"}  }
@@ -37,16 +42,21 @@ class RoomsController < ApplicationController
       return
     end
 
+    # If neither of the last two statements were true, then you are the first person
+    # whose round has ended and you can calculate the state.
     players = @room.players
     players.each do |player|
       player.update({last_round_notice: " "})
     end
 
+    # Farmers first. If they farmed, +1 crop. Easy.
     players.select { |p| p.activity == "farming" }.each do |farmer|
       score = farmer.score
       farmer.update({score: score+1})
     end
 
+    # Investigators are a little trickier. Loop through and see if anyone else visited
+    # the same room as an investigator, set their status accordingly.
     players.select { |p| p.activity == "investigating" }.each do |investigator|
       investigated = []
       player_affected = @room.players.find_by(name: investigator.visiting)
@@ -62,9 +72,13 @@ class RoomsController < ApplicationController
       investigator.update({last_round_notice: notice})
     end
 
+    # Robbing / gaurding is last. For each robber, do the following:
     players.select { |p| p.activity == "robbing" }.each do |robber|
       shot = false
       player_affected = @room.players.find_by(name: robber.visiting)
+
+      # First, loop and see if the robbed player was gaurded, and update
+      # the gaurds status.
       players.select do |p| 
         p.activity == "guarding" && p.visiting == player_affected.name 
       end.each do |guard|
@@ -72,6 +86,9 @@ class RoomsController < ApplicationController
         guard.save
         shot = true
       end
+
+      # Was the robber shot by a gaurd? If so, change lives. Else, update 
+      # the farmer and robbers crop totals.
       if shot == true
         lives_remaining = robber.lives - 1
         robber.update({last_round_notice: "You were shot!", lives: lives_remaining})
@@ -85,14 +102,17 @@ class RoomsController < ApplicationController
       end
     end
 
+    # Reset each player's activity and visiting
     players.each do |player|
       player.update({activity: nil, visiting: nil})
       player.save
     end
 
     @room.round = @room.round + 1
-    @room.round_end = Time.now.to_i + 15
+    @room.round_end = Time.now.to_i + 30
     @room.save
+
+    # If last round, game is now over
     if (@room.round > @room.number_of_rounds)
       respond_to do |format|
         format.js { render json: {game_over: "true"} }
@@ -131,7 +151,7 @@ class RoomsController < ApplicationController
     end
     @room.round = 1
     #This makes the Time UTC
-    @room.round_end = Time.now.to_i + 15
+    @room.round_end = Time.now.to_i + 30
     @room.save
     respond_to do |format|
       format.html { redirect_to @room, notice: "Game start!" }
@@ -182,6 +202,7 @@ class RoomsController < ApplicationController
 
   # POST /rooms
   # POST /rooms.json
+  # This creates the leader player AND the room
   def create
     player_params = {"name"=>room_params[:leader], score: 0, lives: 2}
   
