@@ -137,7 +137,7 @@
 	var startTimer = function() {
 		document.getElementById("countdown").style.display = "block"
 		//View of timer uses seconds, and the ruby time is rounded to nearest second
-		timeleft = parseInt((<%= Integer(1e3*@room.round_end.to_f) %> - Date.now())/1000)
+		timeleft = parseInt((<%= Integer(1e3*@room.round_end.to_f) %> - <%= Integer(1e3*@server_time.to_f) %>)/1000)
 		var downloadTimer = setInterval(function(){
 		  	document.getElementById("countdown").innerHTML = timeleft + " seconds remaining";
 		  	if(timeleft <= 0){
