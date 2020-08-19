@@ -36,7 +36,9 @@
 		</h3>
 
 		<div class="m-2">
-			<%= button_to 'Delete Everything', "/rooms/#{@room.id}/delete_everything" %>
+			<% if current_user.name == @room.leader %>
+				<%= button_to 'Delete Everything', "/rooms/#{@room.id}/delete_everything" %>
+			<% end %>
 		</div>
 	</div>
 </body>

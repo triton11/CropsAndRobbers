@@ -24,6 +24,8 @@ class PlayersController < ApplicationController
 
   # POST /players
   # POST /players.json
+  # This function creates players EXCEPT for the leader,
+  # who is created in the room controller.
   def create
     p = {"name"=>player_params[:name], score: 0, lives: 2}
 
@@ -60,7 +62,6 @@ class PlayersController < ApplicationController
   # DELETE /players/1
   # DELETE /players/1.json
   def destroy
-    puts("destroyed")
     @player.destroy
     respond_to do |format|
       format.html { redirect_to players_url, notice: 'Player was successfully destroyed.' }

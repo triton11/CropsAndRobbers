@@ -35,7 +35,7 @@
 			<p>
 			  Players:
 			  <br>
-			  <% (@room.thief_count + @room.farmer_count + @room.investigator_count).times do |n| %>
+			  <% (@room.robber_count + @room.farmer_count + @room.investigator_count + @room.donator_count).times do |n| %>
 			  	<span id='player_<%=n%>'></span> <br>
 			  <% end %>
 			</p>
@@ -50,14 +50,16 @@
 				You are a <%= current_user.role %>!
 			</p>
 			<div> You have <span id="score">0</span> crops!</div>
-			<div <%= current_user.role != "thief" ? "style=display:none" : ""%>> You have <span id="lives"></span> lives!</div>
+			<div <%= current_user.role != "robber" ? "style=display:none" : ""%>> You have <span id="lives"></span> lives!</div>
 			<div id="update"></div>
 			<div id="countdown"></div>
 			<div id="options">
-				<% if current_user.role == "thief" %>
+				<% if current_user.role == "robber" %>
 					<%= render 'robber' %>
 				<% elsif current_user.role == "farmer" %>
 					<%= render 'farmer' %>
+				<% elsif current_user.role == "donator" %>
+					<%= render 'donator' %>
 				<% elsif current_user.role == "investigator" %>
 					<%= render 'investigator' %>
 				<% end %>

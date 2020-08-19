@@ -1,0 +1,9 @@
+<p>
+  Donate a crop to:
+  <br>
+  <% @room.players.each do |player| %>
+	  <% unless player.name == current_user.name %>
+	  	<button <%="onclick=set_activity("+"#{@room.id}"+","+"'donating'"+","+"#{current_user.id}"+","+"#{player.id}"+")" %> ><%= "#{player.name}" %></button> <br>
+	  <% end %>
+  <% end %>
+</p>

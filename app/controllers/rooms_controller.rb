@@ -45,71 +45,86 @@ class RoomsController < ApplicationController
     # If neither of the last two statements were true, then you are the first person
     # whose round has ended and you can calculate the state.
     players = @room.players
+    players_array = []
     players.each do |player|
-      player.update({last_round_notice: " "})
+      players_array << player.attributes
+    end
+
+    players_array.each do |player|
+      player["last_round_notice"] = " "
     end
 
     # Farmers first. If they farmed, +1 crop. Easy.
-    players.select { |p| p.activity == "farming" }.each do |farmer|
-      score = farmer.score
-      farmer.update({score: score+1})
+    players_array.select { |p| p["activity"] == "farming" }.each do |farmer|
+      score = farmer["score"]
+      farmer["score"] = score + 1
+    end
+
+    # Donators next - also easy. Give +1 to whoever they visit.
+    players_array.select { |p| p["activity"] == "donating" }.each do |donator|
+      player_affected = players_array.select{ |v| v["name"] == donator["visiting"] }[0]
+      score = player_affected["score"]
+      player_affected["score"] = score + 1
     end
 
     # Investigators are a little trickier. Loop through and see if anyone else visited
     # the same room as an investigator, set their status accordingly.
-    players.select { |p| p.activity == "investigating" }.each do |investigator|
+    players_array.select { |p| p["activity"] == "investigating" }.each do |investigator|
       investigated = []
-      player_affected = @room.players.find_by(name: investigator.visiting)
-      players.select {|p| p.id != investigator.id }.each do |player|
-        if player.visiting == player_affected.name
-          investigated.append(player.name)
+      player_affected = players_array.select{ |v| v["name"] == investigator["visiting"] }[0]
+      players_array.select {|p| p["id"] != investigator["id"] }.each do |player|
+        if player["visiting"] == player_affected["name"]
+          investigated.append(player["name"])
         end
       end
       if investigated.empty?
         investigated << "nobody"
       end
-      notice = "While at #{investigator.visiting}, you saw " + investigated.join(", ")
-      investigator.update({last_round_notice: notice})
+      notice = "While at #{investigator['visiting']}, you saw " + investigated.join(", ")
+      investigator["last_round_notice"] = notice
     end
 
     # Robbing / gaurding is last. For each robber, do the following:
-    players.select { |p| p.activity == "robbing" }.each do |robber|
+    players_array.select { |p| p["activity"] == "robbing" }.each do |robber|
       shot = false
-      player_affected = @room.players.find_by(name: robber.visiting)
+      player_affected = players_array.select{ |v| v["name"] == robber["visiting"] }[0]
 
       # First, loop and see if the robbed player was gaurded, and update
       # the gaurds status.
-      players.select do |p| 
-        p.activity == "guarding" && p.visiting == player_affected.name 
+      players_array.select do |p| 
+        p["activity"] == "guarding" && p["visiting"] == player_affected["name"] 
       end.each do |guard|
-        guard.update({last_round_notice: "You shot someone!"})
-        guard.save
+        guard["last_round_notice"] = "You shot someone!"
         shot = true
       end
 
       # Was the robber shot by a gaurd? If so, change lives. Else, update 
       # the farmer and robbers crop totals.
       if shot == true
-        lives_remaining = robber.lives - 1
-        robber.update({last_round_notice: "You were shot!", lives: lives_remaining})
+        lives_remaining = robber["lives"] - 1
+        robber["last_round_notice"] = "You were shot!"
+        robber["lives"] = lives_remaining
       else
-        max_payoff = @room.players.size - 1
-        robber_new_score = (player_affected.score > max_payoff - 1) ? robber.score + max_payoff : robber.score + player_affected.score
-        player_affected_new_score = (player_affected.score > max_payoff - 1) ? player_affected.score - max_payoff : 0
-        player_affected.update({last_round_notice: "You were robbed!", score: player_affected_new_score})
-        player_affected.save
-        robber.update({last_round_notice: "Success!", score: robber_new_score})
+        max_payoff = players_array.size - @room.robber_count
+        robber_new_score = (player_affected["score"] > max_payoff - 1) ? robber["score"] + max_payoff : robber["score"] + player_affected["score"]
+        player_affected_new_score = (player_affected["score"] > max_payoff - 1) ? player_affected["score"] - max_payoff : 0
+        player_affected["last_round_notice"] = "You were robbed!"
+        player_affected["score"] = player_affected_new_score
+        robber["last_round_notice"] = "Success!"
+        robber["score"] = robber_new_score
       end
     end
 
-    # Reset each player's activity and visiting
+    # Reset each player's activity and visiting, and re-save players
     players.each do |player|
-      player.update({activity: nil, visiting: nil})
-      player.save
+      updated_attribs = players_array.select{ |p| p["id"] == player.id }[0]
+      updated_attribs["activity"] = nil
+      updated_attribs["visiting"] = nil
+      player.update(updated_attribs)
     end
 
     @room.round = @room.round + 1
-    @room.round_end = Time.now.to_i + 30
+    @room.round_end = Time.now.to_i + @room.time_per_round
     @room.save
 
     # If last round, game is now over
@@ -129,7 +144,7 @@ class RoomsController < ApplicationController
     player = @room.players.find_by(id: params[:player_id])
     visiting = (params[:player_affected] == "undefined") ? " " : @room.players.find_by(id: params[:player_affected]).name
     player.update({ activity: params[:activity], round: params[:round], visiting: visiting })
-    player.save
+    # player.save
     respond_to do |format|
       format.js { render json: {} }
     end
@@ -137,21 +152,25 @@ class RoomsController < ApplicationController
 
   def start
     set_room
-    thieves = @room.players.sample(@room.thief_count)
-    thieves.each do |thief|
-      thief.update({role: "thief", "score"=>0, "lives"=>2})
+    robbers = @room.players.sample(@room.robber_count)
+    robbers.each do |player|
+      player.update({role: "robber", "score"=>0, "lives"=>2})
     end
-    farmers = (@room.players - thieves).sample(@room.farmer_count)
+    farmers = (@room.players - robbers).sample(@room.farmer_count)
     farmers.each do |player|
       player.update({role: "farmer", "score"=>0, "lives"=>2})
     end
-    investigators = ((@room.players - thieves) - farmers)
+    investigators = ((@room.players - robbers) - farmers).sample(@room.investigator_count)
     investigators.each do |player|
       player.update({role: "investigator", "score"=>0, "lives"=>2})
     end
+    donators = (((@room.players - robbers) - farmers) - investigators)
+    donators.each do |player|
+      player.update({role: "donator", "score"=>0, "lives"=>2})
+    end
     @room.round = 1
     #This makes the Time UTC
-    @room.round_end = Time.now.to_i + 30
+    @room.round_end = Time.now.to_i + @room.time_per_round
     @room.save
     respond_to do |format|
       format.html { redirect_to @room, notice: "Game start!" }
@@ -163,7 +182,7 @@ class RoomsController < ApplicationController
     @robber_total = 0
     @village_total = 0
     @room.players.each do |player|
-      if player.role == "thief"
+      if player.role == "robber"
         @robber_total += player.score
       else
         @village_total += player.score
@@ -259,6 +278,6 @@ class RoomsController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def room_params
-      params.require(:room).permit(:code, :leader, :farmer_count, :thief_count, :investigator_count, :number_of_rounds)
+      params.require(:room).permit(:code, :leader, :farmer_count, :robber_count, :investigator_count, :donator_count, :number_of_rounds, :time_per_round)
     end
 end

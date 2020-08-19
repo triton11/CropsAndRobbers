@@ -44,13 +44,15 @@ ActiveRecord::Schema.define(version: 20191128002659) do
   create_table "rooms", force: :cascade do |t|
     t.string   "code"
     t.string   "leader"
-    t.integer  "thief_count"
+    t.integer  "robber_count"
     t.integer  "farmer_count"
     t.integer  "investigator_count"
+    t.integer  "donator_count"
     t.integer  "round"
     t.integer  "number_of_rounds"
     t.string   "participants"
     t.integer  "round_end"
+    t.integer  "time_per_round"
     t.datetime "created_at",         null: false
     t.datetime "updated_at",         null: false
   end
