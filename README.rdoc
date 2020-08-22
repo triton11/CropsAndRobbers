@@ -11,3 +11,9 @@ This code is not my best work - I wrote it generally late at night, pivoted seve
 * run rake db:migrate
 * start the server with rails -s
 
+=== Roles:
+* Farmer: Each round the farmer can either farm and get 1 crop, or guard another player. If a robber visits the player that is being guarded, they will not get any crops and they will be shot.
+* Robber: Robbers know who the other robbers are and can choose a player to rob each round. Robbers can steal as many crops as there are non-robbers in the game (i.e. if there are 5 players and 2 robbers, each robber can take at most 3 crops.) If they rob a player that is being guarded, they will be shot and not get any crops. If they are shot twice, they will no longer be able to rob for the rest of the game.
+* Investigator: The investigator is on the team of the farmers. Each round they can visit a players house and see who else visits that player that round. They will not see what role any visitors have.
+* Donator: Each round, the donator can give 1 crop to another player.
+

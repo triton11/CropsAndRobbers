@@ -140,11 +140,13 @@
 		timeleft = parseInt((<%= Integer(1e3*@room.round_end.to_f) %> - <%= Integer(1e3*@server_time.to_f) %>)/1000)
 		var downloadTimer = setInterval(function(){
 		  	document.getElementById("countdown").innerHTML = timeleft + " seconds remaining";
-		  	if(timeleft <= 0){
-		    	clearInterval(downloadTimer);
+		  	if (timeleft <= -3) {
+		  		clearInterval(downloadTimer);
+		  		check_for_next_round(<%= @room.id %>,<%= @room.round %>)
+		  	} else if(timeleft <= 0){
 		    	document.getElementById("countdown").innerHTML = " "
 		    	document.getElementById("countdown").style.display = "none"
-		    	check_for_next_round(<%= @room.id %>,<%= @room.round %>)
+		    	document.getElementById("options").style.display = "none"
 		 	}
 		  timeleft -= 1;
 		}, 1000);
